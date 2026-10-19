@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GCP Vertex AI Search (Agent Search) 企業級搜尋引擎示範介面，整合 Google Cloud Discovery Engine。">
+  <title>GCP Agent Search - 智慧企業搜尋引擎</title>
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- 背景流光漸層裝飾 -->
+  <div class="ambient-glow glow-top-left"></div>
+  <div class="ambient-glow glow-bottom-right"></div>
+
+  <!-- 頂部導航列 -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-brands fa-google"></i>
+        </div>
+        <div class="logo-text">
+          <span class="brand-title">GCP Agent Search</span>
+          <span class="brand-badge">Vertex AI Discovery Engine</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="/gcpsearchsop" target="_blank" class="card-action-btn" style="padding: 6px 12px; text-decoration: none; font-size: 0.8rem; border-color: #38bdf8; color: #38bdf8;">
+          <i class="fa-solid fa-book"></i> 建置 SOP
+        </a>
+        <a href="/widget" class="card-action-btn" style="padding: 6px 12px; text-decoration: none; font-size: 0.8rem;">
+          <i class="fa-solid fa-cube"></i> Google 官方小工具
+        </a>
+        <!-- GCP 連線狀態徽章 -->
+        <div class="status-chip" id="gcp-status-chip" title="正在檢查 GCP 連線...">
+          <span class="status-indicator" id="status-indicator"></span>
+          <span class="status-text" id="status-text">連線中...</span>
+          <button class="status-info-btn" id="status-info-btn" title="查看 GCP 設定詳情">
+            <i class="fa-solid fa-circle-info"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- GCP 狀態詳細資訊彈窗 -->
+  <div class="modal-overlay hidden" id="info-modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-cloud"></i> GCP 連線配置詳情</h3>
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body-content">
+        <!-- 動態填入 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 主要內容區 -->
+  <main class="main-wrapper">
+    <!-- 搜尋大標題與搜尋列區塊 -->
+    <section class="hero-search-section">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          智慧企業搜尋 <span class="gradient-text">Agent Search</span>
+        </h1>
+        <p class="hero-subtitle">
+          基於 Google Cloud Discovery Engine 與服務帳戶金鑰驗證，支援語意檢索與關鍵字高亮
+        </p>
+      </div>
+
+      <!-- 搜尋輸入盒 -->
+      <div class="search-box-container">
+        <form id="search-form" class="search-form" onsubmit="return false;">
+          <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input 
+              type="text" 
+              id="search-input" 
+              class="search-input" 
+              placeholder="輸入搜尋關鍵字（例如：半導體測試、先進封裝、AI、日月光）..." 
+              autocomplete="off"
+              autofocus
+            >
+            <button type="button" class="clear-btn hidden" id="clear-search-btn" title="清除輸入">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <button type="submit" class="search-submit-btn" id="search-submit-btn">
+              <span>搜尋</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </form>
+
+        <!-- 建議標籤 / 熱門搜尋 -->
+        <div class="suggestion-tags">
+          <span class="tags-label"><i class="fa-solid fa-sparkles"></i> 推薦查詢：</span>
+          <button class="tag-chip" data-query="半導體測試">半導體測試</button>
+          <button class="tag-chip" data-query="先進封裝">先進封裝</button>
+          <button class="tag-chip" data-query="AI 人工智慧">AI 人工智慧</button>
+          <button class="tag-chip" data-query="日月光">日月光</button>
+          <button class="tag-chip" data-query="SEMICON Taiwan">SEMICON Taiwan</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 搜尋結果區塊 -->
+    <section class="results-section hidden" id="results-section">
+      <!-- 統計數據列 -->
+      <div class="results-stats-bar">
+        <div class="stats-left">
+          <span>找到約 <strong id="total-count">0</strong> 筆資料</span>
+          <span class="stat-divider">•</span>
+          <span>耗時 <span id="latency-time">0</span> ms</span>
+          <span class="stat-divider">•</span>
+          <span class="stat-query">關鍵字：<code id="current-query-display"></code></span>
+        </div>
+      </div>
+
+      <!-- AI 摘要生成區塊 (如果有 Summary) -->
+      <div class="ai-summary-card hidden" id="ai-summary-card">
+        <div class="summary-header">
+          <div class="summary-title">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Vertex AI 智慧摘要生成</span>
+          </div>
+          <span class="summary-tag">Generative Search</span>
+        </div>
+        <div class="summary-body" id="summary-text-content">
+          <!-- AI 摘要內容 -->
+        </div>
+      </div>
+
+      <!-- 結果列表 -->
+      <div class="results-list" id="results-list">
+        <!-- 動態渲染搜尋結果卡片 -->
+      </div>
+
+      <!-- 分頁 / 載入更多 -->
+      <div class="pagination-container hidden" id="pagination-container">
+        <button class="load-more-btn" id="load-more-btn">
+          <i class="fa-solid fa-spinner-third"></i>
+          <span>載入更多結果</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 載入中骨架屏動畫 -->
+    <section class="loading-section hidden" id="loading-section">
+      <div class="skeleton-stats"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </section>
+
+    <!-- 空狀態 / 找不到結果 -->
+    <section class="empty-state-section hidden" id="empty-state-section">
+      <div class="empty-icon">
+        <i class="fa-regular fa-folder-open"></i>
+      </div>
+      <h3 class="empty-title">查無相關搜尋結果</h3>
+      <p class="empty-desc">請嘗試其他關鍵字、檢查拼字，或點選上方的推薦關鍵字進行搜尋。</p>
+    </section>
+
+    <!-- 錯誤狀態 -->
+    <section class="error-state-section hidden" id="error-state-section">
+      <div class="error-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="error-title">搜尋服務異常</h3>
+      <p class="error-desc" id="error-message-text">無法完成搜尋，請檢查 GCP 憑證與 Engine 設定。</p>
+      <button class="retry-btn" id="retry-btn">
+        <i class="fa-solid fa-rotate-right"></i> 重新嘗試
+      </button>
+    </section>
+  </main>
+
+  <!-- 頁尾 -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>
+        Google Cloud Platform Discovery Engine Integration Demo • 
+        後端 Python 服務帳戶驗證 • 前端安全無金鑰暴露架構
+      </p>
+    </div>
+  </footer>
+
+  <!-- Toast 通知元件 -->
+  <div class="toast-notification hidden" id="toast-notification"></div>
+
+  <!-- JavaScript -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

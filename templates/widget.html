@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Google Cloud Discovery Engine 官方現成搜尋小工具 (gen-search-widget) 示範頁面">
+  <title>Google 官方搜尋小工具 - gen-search-widget</title>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- 1. 載入 Google 官方 Widget JavaScript Bundle (來自截圖) -->
+  <script src="https://cloud.google.com/ai/gen-app-builder/client?hl=zh_TW"></script>
+</head>
+<body>
+  <!-- 背景流光漸層裝飾 -->
+  <div class="ambient-glow glow-top-left"></div>
+  <div class="ambient-glow glow-bottom-right"></div>
+
+  <!-- 頂部導航列 -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-brands fa-google"></i>
+        </div>
+        <div class="logo-text">
+          <span class="brand-title">Google 官方小工具示範</span>
+          <span class="brand-badge">&lt;gen-search-widget&gt;</span>
+        </div>
+      </div>
+
+      <!-- 切換模式連結 -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="/" class="card-action-btn" style="padding: 6px 14px; font-size: 0.85rem;">
+          <i class="fa-solid fa-arrow-left"></i> 返回自訂 UI 介面
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. Google 官方 Search Widget 元件 (來自截圖) -->
+  <gen-search-widget
+    configId="{{ config_id }}"
+    triggerId="searchWidgetTrigger">
+  </gen-search-widget>
+
+  <!-- 主要內容區 -->
+  <main class="main-wrapper" style="max-width: 840px;">
+    <section class="hero-search-section">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Google 官方現成 <span class="gradient-text">搜尋小工具</span>
+        </h1>
+        <p class="hero-subtitle">
+          此頁面使用 Google 官方提供的 <code>&lt;gen-search-widget&gt;</code>，由 Python 後端動態產生短期 OAuth 權杖（<code>authToken</code>）進行驗證。
+        </p>
+      </div>
+
+      <!-- 3. 開啟小工具的輸入元素 (來自截圖) -->
+      <div class="search-box-container" style="margin-top: 24px;">
+        <div class="search-input-wrapper" style="cursor: pointer; border-color: rgba(66, 133, 244, 0.5);">
+          <i class="fa-solid fa-magnifying-glass search-icon" style="color: #4285f4;"></i>
+          <input 
+            type="text" 
+            id="searchWidgetTrigger" 
+            class="search-input" 
+            placeholder="點擊此處，開啟 Google 官方搜尋小工具..." 
+            readonly
+            style="cursor: pointer;"
+          >
+          <button type="button" class="search-submit-btn" onclick="document.getElementById('searchWidgetTrigger').click();">
+            <span>開啟小工具</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Token 狀態與架構說明資訊卡片 -->
+    <section style="margin-top: 40px;">
+      <div class="ai-summary-card" style="border-color: rgba(66, 133, 244, 0.4);">
+        <div class="summary-header">
+          <div class="summary-title">
+            <i class="fa-solid fa-key"></i>
+            <span>OAuth 授權權杖（Auth Token）狀態</span>
+          </div>
+          <span class="summary-tag" id="token-status-badge" style="background: rgba(52, 168, 83, 0.15); color: #34a853;">
+            <i class="fa-solid fa-circle-check"></i> TOKEN ACTIVE
+          </span>
+        </div>
+        
+        <div class="summary-body">
+          <table class="info-table" style="font-size: 0.85rem;">
+            <tbody>
+              <tr>
+                <td class="label">Config ID</td>
+                <td class="value"><code id="config-id-val">{{ config_id }}</code></td>
+              </tr>
+              <tr>
+                <td class="label">產生來源</td>
+                <td class="value">後端 Python API <code>/api/token</code>（使用服務帳戶金鑰自動簽發）</td>
+              </tr>
+              <tr>
+                <td class="label">權杖前綴</td>
+                <td class="value"><code id="token-preview">載入中...</code></td>
+              </tr>
+              <tr>
+                <td class="label">賦值程式碼</td>
+                <td class="value"><code>searchWidget.authToken = "&lt;OAuth Access Token&gt;";</code></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 16px; display: flex; gap: 10px; align-items: center;">
+            <button class="card-action-btn" id="refresh-token-btn" style="padding: 6px 14px;">
+              <i class="fa-solid fa-rotate"></i> 重新從後端更新 Token
+            </button>
+            <span id="refresh-hint" style="font-size: 0.8rem; color: #9ca3af;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 常見注意事項 -->
+      <div class="result-card" style="display: block; margin-top: 20px; font-size: 0.85rem; line-height: 1.7; color: #9ca3af;">
+        <h4 style="color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-exclamation" style="color: #fbbc05;"></i>
+          使用 Google 官方小工具的注意事項
+        </h4>
+        <ul style="padding-left: 20px;">
+          <li><strong>允許網域 (Authorized Domains)</strong>：如果在點擊輸入框後小工具未彈出，請至 GCP 後台（<strong>應用程式 &gt; PbSearch &gt; 整合 &gt; 小工具</strong>），檢查下方「授權網域」是否有加入 <code>localhost</code>。</li>
+          <li><strong>安全性優勢</strong>：此方式不需要將任何私密金鑰暴露給前端，前端僅持有由後端產生的短期（1 小時）OAuth 臨時權杖。</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- 4. 設定 Authorization Token 的 JavaScript (來自截圖) -->
+  <script>
+    // 預先由 Jinja2 模板注入的 Token (若有)
+    let initialToken = {{ token|tojson|safe }};
+
+    function applyTokenToWidget(token) {
+      if (!token) return;
+      
+      // 來自截圖中的標準寫法：
+      // Set authorization token.
+      const searchWidget = document.querySelector('gen-search-widget');
+      if (searchWidget) {
+        searchWidget.authToken = token;
+        console.log("✅ 成功將 OAuth Token 設定至 <gen-search-widget>!");
+      }
+
+      // 更新畫面顯示
+      const tokenPreview = document.getElementById('token-preview');
+      if (tokenPreview) {
+        tokenPreview.textContent = token.substring(0, 30) + '...' + token.substring(token.length - 10);
+      }
+    }
+
+    // 頁面載入時設定 Token
+    document.addEventListener('DOMContentLoaded', () => {
+      if (initialToken) {
+        applyTokenToWidget(initialToken);
+      } else {
+        // 若初始無 Token，透過 /api/token 非同步取得
+        fetchNewToken();
+      }
+
+      // 綁定手動重新整理按鈕
+      document.getElementById('refresh-token-btn').addEventListener('click', () => {
+        fetchNewToken(true);
+      });
+    });
+
+    // 向後端 /api/token 請求最新 Token
+    async function fetchNewToken(showFeedback = false) {
+      const hint = document.getElementById('refresh-hint');
+      if (showFeedback && hint) hint.textContent = "正在向後端申請最新 Token...";
+
+      try {
+        const res = await fetch('/api/token');
+        const data = await res.json();
+        if (data.status === 'success' && data.token) {
+          applyTokenToWidget(data.token);
+          if (showFeedback && hint) {
+            hint.textContent = "✅ Token 已成功更新！";
+            setTimeout(() => { hint.textContent = ""; }, 3000);
+          }
+        } else {
+          throw new Error(data.message || '取得 Token 失敗');
+        }
+      } catch (err) {
+        console.error("更新 Token 發生錯誤:", err);
+        if (hint) hint.textContent = "❌ 更新失敗: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
